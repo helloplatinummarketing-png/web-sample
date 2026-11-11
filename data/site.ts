@@ -23,7 +23,7 @@ export const site = {
     { days: "Saturday", time: "9:00am – 1:00pm" },
     { days: "Sunday & public holidays", time: "Closed" },
   ],
-  url: "https://example.vercel.app", // live domain, used for SEO + sitemap
+  url: "https://web-sample-zeta.vercel.app", // live domain, used for SEO + sitemap (update when the client domain is live)
   /** Prefix for application reference numbers, e.g. GP-2026-48213 */
   refPrefix: "GP",
   registrationFee: "KES [X,XXX]",
