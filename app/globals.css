@@ -1,0 +1,126 @@
+@import "tailwindcss";
+@import "lenis/dist/lenis.css";
+
+/* Class-based dark mode (toggled on <html>) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Semantic tokens that flip between light and dark */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-link: var(--link);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-sora), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Fixed brand palette, "Midnight & Gold" */
+@theme {
+  --color-navy: #0b1b3f;
+  --color-navy-950: #050d22;
+  --color-navy-900: #08142f;
+  --color-navy-800: #112657;
+  --color-navy-700: #1a3270;
+  --color-royal: #2847d9;
+  --color-royal-400: #6f86f0;
+  --color-royal-300: #9fb0f6;
+  --color-royal-50: #eef1fd;
+  --color-gold: #f5b841;
+  --color-gold-300: #f9d27f;
+  --color-gold-600: #d9971b;
+  --color-gold-50: #fef7e6;
+  --color-success: #16a34a;
+
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-marquee: marquee 40s linear infinite;
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+}
+
+:root {
+  --bg: #f7f8fc;
+  --surface: #ffffff;
+  --surface-2: #eef1fa;
+  --fg: #0f172a;
+  --muted: #5b6b82; /* slightly darker than #64748B to keep AA on the soft background */
+  --line: #e3e7f1;
+  --link: #2847d9;
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #071230;
+  --surface: #0d1d45;
+  --surface-2: #12275a;
+  --fg: #eef2fb;
+  --muted: #a3b0c9;
+  --line: rgba(255, 255, 255, 0.1);
+  --link: #f5b841;
+  color-scheme: dark;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: clip;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+/* Keyboard focus: gold ring, visible on both themes */
+:focus-visible {
+  outline: 3px solid #f5b841;
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+::selection {
+  background: #f5b841;
+  color: #0b1b3f;
+}
+
+/* Thin gold accent line utility */
+.gold-rule {
+  height: 2px;
+  width: 56px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #f5b841, rgba(245, 184, 65, 0));
+}
+
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes fadeUp {
+  from { transform: translateY(14px); }
+  to { transform: none; }
+}
