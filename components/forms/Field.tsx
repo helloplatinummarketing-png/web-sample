@@ -2,16 +2,16 @@ import { AlertCircle } from "lucide-react";
 import type { ReactNode } from "react";
 
 export const inputCls = (invalid?: boolean) =>
-  `block w-full rounded-xl border bg-surface px-4 py-3 text-base text-fg shadow-sm transition placeholder:text-muted/70 focus:outline-none focus:ring-4 ${
+  `block w-full rounded-xl border bg-white/[0.06] px-4 py-3 text-base text-fg transition placeholder:text-muted/70 focus:outline-none focus:ring-4 ${
     invalid
       ? "border-red-500 focus:border-red-500 focus:ring-red-500/15"
-      : "border-line hover:border-muted/40 focus:border-royal focus:ring-royal/15 dark:focus:border-gold dark:focus:ring-gold/15"
+      : "border-line hover:border-muted/40 focus:border-coral focus:ring-coral/15"
   }`;
 
 export function ErrorText({ id, children }: { id: string; children?: ReactNode }) {
   if (!children) return null;
   return (
-    <p id={id} className="mt-1.5 flex items-center gap-1.5 text-sm font-medium text-red-600 dark:text-red-400">
+    <p id={id} className="mt-1.5 flex items-center gap-1.5 text-sm font-medium text-red-400">
       <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
       {children}
     </p>
@@ -41,7 +41,7 @@ export function Field({
       <label htmlFor={id} className="mb-1.5 block text-sm font-semibold text-fg">
         {label}
         {required ? (
-          <span className="text-red-600 dark:text-red-400" aria-hidden="true">
+          <span className="text-red-400" aria-hidden="true">
             {" "}
             *
           </span>

@@ -1,73 +1,52 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Sora } from "next/font/google";
-import "./globals.css";
-import { site } from "@/data/site";
-import { themeScript } from "@/lib/theme";
-import { Providers } from "@/components/layout/Providers";
-import { Navbar } from "@/components/layout/Navbar";
+import { JetBrains_Mono, Manrope, Syne } from "next/font/google";
 import { Footer } from "@/components/layout/Footer";
-import { WhatsAppButton } from "@/components/layout/WhatsAppButton";
-import { SmoothScroll } from "@/components/layout/SmoothScroll";
+import { Navbar } from "@/components/layout/Navbar";
+import { Shell } from "@/components/layout/Shell";
+import { site } from "@/data/site";
+import { modeScript } from "@/lib/mode";
+import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
-const sora = Sora({ subsets: ["latin"], variable: "--font-sora", display: "swap", weight: ["600", "700"], preload: false });
+const syne = Syne({ subsets: ["latin"], weight: ["600", "700", "800"], variable: "--font-syne", display: "swap" });
+const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope", display: "swap" });
+const jet = JetBrains_Mono({ subsets: ["latin"], weight: ["500", "600"], variable: "--font-jet", display: "swap", preload: false });
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
-  title: {
-    default: `${site.name} | Licensed Overseas Recruitment from Kenya`,
-    template: `%s | ${site.name}`,
-  },
+  title: { default: `${site.name}: Overseas jobs & visas from Nairobi`, template: `%s · ${site.name}` },
   description: site.description,
   applicationName: site.name,
-  keywords: [
-    "recruitment agency Kenya",
-    "jobs abroad for Kenyans",
-    "NEA licensed agency",
-    "UK health and care visa",
-    "Germany skilled worker visa",
-    "jobs in Dubai from Kenya",
-    "Canada work permit Kenya",
-    "Poland work permit",
-  ],
+  keywords: ["jobs abroad Kenya", "overseas recruitment Nairobi", "NEA licensed agency", "work visa Kenya", "UK care jobs", "Gulf jobs"],
+  alternates: { canonical: "/" },
   openGraph: {
     type: "website",
-    locale: "en_KE",
     siteName: site.name,
-    title: `${site.name} | ${site.tagline}`,
+    title: `${site.name}: ${site.tagline}`,
     description: site.description,
+    url: "/",
+    locale: "en_KE",
   },
-  twitter: {
-    card: "summary_large_image",
-    title: `${site.name} | ${site.tagline}`,
-    description: site.description,
-  },
-  robots: { index: true, follow: true },
+  twitter: { card: "summary_large_image", title: site.name, description: site.description },
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#F7F8FC" },
-    { media: "(prefers-color-scheme: dark)", color: "#071230" },
-  ],
+  themeColor: "#031f1b",
+  width: "device-width",
+  initialScale: 1,
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${sora.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${syne.variable} ${manrope.variable} ${jet.variable}`} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script dangerouslySetInnerHTML={{ __html: modeScript }} />
       </head>
-      <body className="flex min-h-dvh flex-col">
-        <Providers>
-          <SmoothScroll />
+      <body className="antialiased">
+        <Shell>
           <Navbar />
-          <main id="main" className="flex-1">
-            {children}
-          </main>
+          {children}
           <Footer />
-          <WhatsAppButton />
-        </Providers>
+        </Shell>
       </body>
     </html>
   );

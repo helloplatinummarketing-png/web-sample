@@ -1,27 +1,20 @@
 import Link from "next/link";
 import { site } from "@/data/site";
 
-export function LogoMark({ className = "h-10 w-10" }: { className?: string }) {
+/** Placeholder mark: a globe with a sunrise arc. Replace with the client's logo. */
+export function Logo() {
   return (
-    <span className={`grid shrink-0 place-items-center rounded-xl bg-navy ring-1 ring-gold/40 dark:bg-navy-800 ${className}`}>
-      <svg viewBox="0 0 40 40" className="h-[70%] w-[70%]" aria-hidden="true">
-        <circle cx="20" cy="20" r="13" fill="none" stroke="#F5B841" strokeWidth="1.6" />
-        <ellipse cx="20" cy="20" rx="6" ry="13" fill="none" stroke="#F5B841" strokeWidth="1.2" opacity=".65" />
-        <path d="M7 20h26" stroke="#F5B841" strokeWidth="1.2" opacity=".65" />
-        <path d="M14 27c4-9 10-13 18-15" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
-        <circle cx="32" cy="12" r="2.6" fill="#F5B841" />
+    <Link href="/" className="flex items-center gap-2.5" aria-label={`${site.name}, home`}>
+      <svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="16" cy="16" r="12" fill="none" stroke="#0e9f6e" strokeWidth="1.5" />
+        <ellipse cx="16" cy="16" rx="5" ry="12" fill="none" stroke="#0e9f6e" strokeWidth="1" opacity="0.7" />
+        <path d="M4 16h24" stroke="#0e9f6e" strokeWidth="1" opacity="0.7" />
+        <path d="M6 22 Q16 4 27 12" fill="none" stroke="#ff6b4a" strokeWidth="2.2" strokeLinecap="round" />
+        <circle cx="27" cy="12" r="2.4" fill="#ff6b4a" />
       </svg>
-    </span>
-  );
-}
-
-export function Logo({ invert = false }: { invert?: boolean }) {
-  return (
-    <Link href="/" className="group flex min-w-0 items-center gap-2.5" aria-label={`${site.name}, home`}>
-      <LogoMark />
-      <span className="min-w-0 leading-tight">
-        <span className={`block truncate font-display text-[15px] font-bold ${invert ? "text-white" : "text-fg"}`}>{site.name}</span>
-        <span className={`hidden text-[11px] font-medium sm:block ${invert ? "text-white/60" : "text-muted"}`}>{site.licence}</span>
+      <span className="whitespace-nowrap font-display text-sm font-bold leading-tight text-ivory">
+        {site.shortName}
+        <span className="block font-mono text-[9px] font-medium uppercase tracking-[0.2em] text-jade-300">Overseas Careers</span>
       </span>
     </Link>
   );

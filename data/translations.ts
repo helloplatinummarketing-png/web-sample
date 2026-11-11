@@ -1,38 +1,29 @@
 /**
- * English / Kiswahili strings for the language toggle (demo covers navbar, hero and CTAs).
+ * English / Kiswahili strings for the language toggle (navbar, hero and CTAs).
  * Have a native speaker review the Kiswahili before launch.
  */
 const en = {
   "nav.home": "Home",
   "nav.jobs": "Jobs",
-  "nav.destinations": "Destinations",
-  "nav.track": "Track Application",
+  "nav.apply": "Apply",
+  "nav.track": "Track",
   "nav.about": "About",
   "nav.contact": "Contact",
 
   "cta.apply": "Apply Now",
-  "cta.eligibility": "Check My Eligibility",
-  "cta.browseJobs": "Browse Jobs",
-  "cta.start": "Start my application",
-  "cta.advisor": "Talk to an advisor",
+  "cta.start": "Start My Journey",
+  "cta.jobs": "Find Jobs Abroad",
   "cta.chat": "Chat with an advisor",
 
-  "hero.eyebrow": "Licensed overseas recruitment · Nairobi",
-  "hero.title.a": "Kenyan talent.",
-  "hero.title.b": "Global careers.",
-  "hero.title.c": "One honest path.",
+  "hero.eyebrow": "NEA-licensed overseas recruitment",
+  "hero.title.a": "Your career journey starts in",
+  "hero.title.b": "Nairobi.",
   "hero.subtitle":
-    "We connect skilled professionals and hard-working Kenyans with verified employers in 8 countries, and walk with you through every document, interview and visa step. No shortcuts, no hidden fees.",
-  "hero.trusted": "Kenyans placed abroad",
-  "hero.globe": "Live routes from Nairobi",
+    "We match skilled and hard-working Kenyans with verified employers in eight countries, then guide every document, interview and visa step until you land.",
 
-  "band.title": "Your next chapter is one application away.",
-  "band.body":
-    "It takes about 10 minutes. A licensed advisor reviews every application personally and calls you within two working days.",
-
-  "ui.language": "Language",
   "ui.menu.open": "Open menu",
   "ui.menu.close": "Close menu",
+  "ui.lang": "Switch language",
 };
 
 export type TKey = keyof typeof en;
@@ -40,34 +31,25 @@ export type TKey = keyof typeof en;
 const sw: Record<TKey, string> = {
   "nav.home": "Nyumbani",
   "nav.jobs": "Kazi",
-  "nav.destinations": "Nchi",
-  "nav.track": "Fuatilia Ombi",
-  "nav.about": "Kuhusu Sisi",
-  "nav.contact": "Wasiliana Nasi",
+  "nav.apply": "Tuma Ombi",
+  "nav.track": "Fuatilia",
+  "nav.about": "Kuhusu",
+  "nav.contact": "Wasiliana",
 
-  "cta.apply": "Tuma Ombi",
-  "cta.eligibility": "Angalia Ustahiki Wangu",
-  "cta.browseJobs": "Tazama Kazi",
-  "cta.start": "Anza ombi langu",
-  "cta.advisor": "Ongea na mshauri",
+  "cta.apply": "Tuma Ombi Sasa",
+  "cta.start": "Anza Safari Yangu",
+  "cta.jobs": "Tafuta Kazi Ng'ambo",
   "cta.chat": "Ongea na mshauri",
 
-  "hero.eyebrow": "Wakala wa ajira ng'ambo aliyesajiliwa · Nairobi",
-  "hero.title.a": "Kipaji cha Kenya.",
-  "hero.title.b": "Kazi za kimataifa.",
-  "hero.title.c": "Njia moja ya uaminifu.",
+  "hero.eyebrow": "Wakala wa ajira ng'ambo aliyesajiliwa na NEA",
+  "hero.title.a": "Safari yako ya kikazi inaanzia",
+  "hero.title.b": "Nairobi.",
   "hero.subtitle":
-    "Tunawaunganisha wataalamu na Wakenya wenye bidii na waajiri waliothibitishwa katika nchi 8, na tunakuongoza katika kila hatua ya nyaraka, mahojiano na visa. Hakuna njia za mkato, hakuna ada zilizofichwa.",
-  "hero.trusted": "Wakenya wamepata kazi ng'ambo",
-  "hero.globe": "Safari kutoka Nairobi",
+    "Tunawaunganisha Wakenya wenye ujuzi na bidii na waajiri waliothibitishwa katika nchi nane, na kukuongoza katika kila hatua ya nyaraka, mahojiano na visa hadi utakapofika.",
 
-  "band.title": "Sura yako mpya iko umbali wa ombi moja tu.",
-  "band.body":
-    "Inachukua takriban dakika 10. Mshauri aliyesajiliwa hukagua kila ombi mwenyewe na kukupigia simu ndani ya siku mbili za kazi.",
-
-  "ui.language": "Lugha",
   "ui.menu.open": "Fungua menyu",
   "ui.menu.close": "Funga menyu",
+  "ui.lang": "Badilisha lugha",
 };
 
 export const translations = { en, sw };

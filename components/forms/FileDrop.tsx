@@ -26,7 +26,7 @@ function Preview({ file, onRemove }: { file: File; onRemove: () => void }) {
 
   return (
     <li className="flex items-center gap-3 rounded-xl border border-line bg-surface p-3">
-      <span className="relative grid h-14 w-12 shrink-0 place-items-center overflow-hidden rounded-lg bg-surface-2 text-royal dark:text-gold">
+      <span className="relative grid h-14 w-12 shrink-0 place-items-center overflow-hidden rounded-lg bg-surface-2 text-coral">
         {url ? (
           <Image src={url} alt={`Preview of ${file.name}`} fill sizes="48px" className="object-cover" unoptimized />
         ) : (
@@ -44,7 +44,7 @@ function Preview({ file, onRemove }: { file: File; onRemove: () => void }) {
         type="button"
         onClick={onRemove}
         aria-label={`Remove ${file.name}`}
-        className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-muted hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
+        className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-muted hover:bg-red-500/10 hover:text-red-400"
       >
         <X className="h-4 w-4" aria-hidden="true" />
       </button>
@@ -92,7 +92,7 @@ export function FileDrop({
       <p id={labelId} className="mb-1.5 text-sm font-semibold text-fg">
         {label}
         {required ? (
-          <span className="text-red-600 dark:text-red-400" aria-hidden="true">
+          <span className="text-red-400" aria-hidden="true">
             {" "}
             *
           </span>
@@ -138,13 +138,13 @@ export function FileDrop({
           }}
           className={`flex w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed px-5 py-7 text-center transition ${
             error
-              ? "border-red-400 bg-red-50/50 dark:bg-red-500/5"
+              ? "border-red-400 bg-red-500/5"
               : over
-                ? "border-royal bg-royal-50 dark:border-gold dark:bg-gold/10"
-                : "border-line bg-surface-2/40 hover:border-royal/60 hover:bg-royal-50/50 dark:hover:border-gold/60 dark:hover:bg-gold/5"
+                ? "border-coral bg-coral/10"
+                : "border-line bg-surface-2/40 hover:border-coral/60 hover:bg-coral/5"
           }`}
         >
-          <UploadCloud className="h-8 w-8 text-royal dark:text-gold" aria-hidden="true" />
+          <UploadCloud className="h-8 w-8 text-coral" aria-hidden="true" />
           <span id={`${id}-cta`} className="mt-2 text-sm font-semibold text-fg">
             {files.length > 0 ? "Add another file" : "Tap to upload"} <span className="hidden font-normal text-muted sm:inline">or drag and drop</span>
           </span>

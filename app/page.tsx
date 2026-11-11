@@ -1,38 +1,36 @@
+import { ChapterSection } from "@/components/home/ChapterSection";
 import { Hero } from "@/components/home/Hero";
-import { TrustBar } from "@/components/home/TrustBar";
-import { Destinations } from "@/components/home/Destinations";
-import { EligibilityChecker } from "@/components/home/EligibilityChecker";
-import { HowItWorks } from "@/components/home/HowItWorks";
-import { FeaturedJobs } from "@/components/home/FeaturedJobs";
-import { Fees } from "@/components/home/Fees";
-import { Stats } from "@/components/home/Stats";
-import { Testimonials } from "@/components/home/Testimonials";
-import { ScamAwareness } from "@/components/home/ScamAwareness";
-import { FAQ } from "@/components/home/FAQ";
-import { CtaBand } from "@/components/CtaBand";
-import { faqs } from "@/data/content";
+import { HomeJourney } from "@/components/home/HomeJourney";
+import { IntroLoader } from "@/components/home/IntroLoader";
+import { chapters } from "@/data/journey";
+import { preload } from "react-dom";
+import { site } from "@/data/site";
 
 export default function HomePage() {
-  const faqJsonLd = {
+  preload("/textures/earth-poster.webp", { as: "image", fetchPriority: "high" });
+  const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+    "@type": "EmploymentAgency",
+    name: site.name,
+    description: site.description,
+    url: site.url,
+    telephone: site.phoneDisplay,
+    email: site.email,
+    address: { "@type": "PostalAddress", addressLocality: "Nairobi", addressCountry: "KE", streetAddress: site.address },
   };
   return (
     <>
-      <Hero />
-      <TrustBar />
-      <Destinations />
-      <EligibilityChecker />
-      <HowItWorks />
-      <FeaturedJobs />
-      <Fees />
-      <Stats />
-      <Testimonials />
-      <ScamAwareness />
-      <FAQ />
-      <CtaBand />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+      <IntroLoader />
+      <HomeJourney />
+      <main id="main" className="relative">
+        <div id="journey">
+          <Hero />
+          {chapters.slice(1).map((c) => (
+            <ChapterSection key={c.id} chapter={c} />
+          ))}
+        </div>
+      </main>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     </>
   );
 }

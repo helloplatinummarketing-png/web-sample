@@ -1,126 +1,273 @@
 @import "tailwindcss";
-@import "lenis/dist/lenis.css";
 
-/* Class-based dark mode (toggled on <html>) */
-@custom-variant dark (&:where(.dark, .dark *));
-
-/* Semantic tokens that flip between light and dark */
-@theme inline {
-  --color-bg: var(--bg);
-  --color-surface: var(--surface);
-  --color-surface-2: var(--surface-2);
-  --color-fg: var(--fg);
-  --color-muted: var(--muted);
-  --color-line: var(--line);
-  --color-link: var(--link);
-
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-sora), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-}
-
-/* Fixed brand palette, "Midnight & Gold" */
+/* ─── "Sunrise Horizon" design tokens ───────────────────────────── */
 @theme {
-  --color-navy: #0b1b3f;
-  --color-navy-950: #050d22;
-  --color-navy-900: #08142f;
-  --color-navy-800: #112657;
-  --color-navy-700: #1a3270;
-  --color-royal: #2847d9;
-  --color-royal-400: #6f86f0;
-  --color-royal-300: #9fb0f6;
-  --color-royal-50: #eef1fd;
-  --color-gold: #f5b841;
-  --color-gold-300: #f9d27f;
-  --color-gold-600: #d9971b;
-  --color-gold-50: #fef7e6;
-  --color-success: #16a34a;
+  --color-night-950: #021411;
+  --color-night-900: #031f1b;
+  --color-night-800: #053b33;
+  --color-night-700: #0a4a40;
+  --color-jade: #0e9f6e;
+  --color-jade-300: #5fd3a8;
+  --color-jade-700: #08744f;
+  --color-coral: #ff6b4a;
+  --color-coral-300: #ff9a80;
+  --color-coral-600: #e8512f;
+  --color-sand: #f6ebdd;
+  --color-ivory: #fffdf8;
 
-  --animate-float: float 6s ease-in-out infinite;
-  --animate-marquee: marquee 40s linear infinite;
+  /* semantic (dark surfaces by default) */
+  --color-bg: #031f1b;
+  --color-surface: rgb(255 255 255 / 0.06);
+  --color-surface-2: rgb(255 255 255 / 0.1);
+  --color-fg: #fffdf8;
+  --color-muted: #b9c9c1;
+  --color-line: rgb(14 159 110 / 0.35);
 
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-  }
-  @keyframes marquee {
-    from { transform: translateX(0); }
-    to { transform: translateX(-50%); }
-  }
-}
+  --font-display: var(--font-syne), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jet), ui-monospace, SFMono-Regular, monospace;
 
-:root {
-  --bg: #f7f8fc;
-  --surface: #ffffff;
-  --surface-2: #eef1fa;
-  --fg: #0f172a;
-  --muted: #5b6b82; /* slightly darker than #64748B to keep AA on the soft background */
-  --line: #e3e7f1;
-  --link: #2847d9;
-  color-scheme: light;
-}
-
-.dark {
-  --bg: #071230;
-  --surface: #0d1d45;
-  --surface-2: #12275a;
-  --fg: #eef2fb;
-  --muted: #a3b0c9;
-  --line: rgba(255, 255, 255, 0.1);
-  --link: #f5b841;
-  color-scheme: dark;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 html {
-  -webkit-tap-highlight-color: transparent;
+  color-scheme: dark;
+  background: var(--color-night-900);
+  -webkit-text-size-adjust: 100%;
 }
-
 body {
-  background: var(--bg);
-  color: var(--fg);
+  background: radial-gradient(120% 80% at 50% 0%, #053b33 0%, #031f1b 55%, #021411 100%) var(--color-night-900);
+  background-repeat: no-repeat;
+  color: var(--color-fg);
   font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
   overflow-x: clip;
+  min-height: 100dvh;
 }
-
-h1, h2, h3, h4 {
+h1,
+h2,
+h3,
+.font-display {
   font-family: var(--font-display);
   letter-spacing: -0.02em;
 }
-
-/* Keyboard focus: gold ring, visible on both themes */
-:focus-visible {
-  outline: 3px solid #f5b841;
-  outline-offset: 3px;
-  border-radius: 8px;
-}
-
 ::selection {
-  background: #f5b841;
-  color: #0b1b3f;
+  background: var(--color-coral);
+  color: var(--color-night-900);
+}
+:focus-visible {
+  outline: 2px solid var(--color-coral);
+  outline-offset: 3px;
+  border-radius: 6px;
 }
 
-/* Thin gold accent line utility */
-.gold-rule {
-  height: 2px;
-  width: 56px;
-  border-radius: 2px;
-  background: linear-gradient(90deg, #f5b841, rgba(245, 184, 65, 0));
+/* Lenis */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
 }
 
-.no-scrollbar { scrollbar-width: none; }
-.no-scrollbar::-webkit-scrollbar { display: none; }
+/* Light sections */
+.section-light {
+  --color-fg: #0b2a24;
+  --color-muted: #4c5f58;
+  --color-line: rgb(8 116 79 / 0.2);
+  --color-surface: #ffffff;
+  --color-surface-2: #f6ebdd;
+  background: var(--color-ivory);
+  color: var(--color-fg);
+}
+
+/* Glass card */
+.glass {
+  background: rgb(255 255 255 / 0.06);
+  border: 1px solid rgb(14 159 110 / 0.55);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.08) inset,
+    0 30px 60px -30px rgb(0 0 0 / 0.7);
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 999px;
+  background: rgb(255 107 74 / 0.14);
+  border: 1px solid rgb(255 107 74 / 0.45);
+  color: #ff9a80;
+  font-family: var(--font-jet);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.6rem;
+}
+
+/* ─── Journey card reveal: pill → title → text → image → button ─── */
+.jcard {
+  transform-origin: 0% 50%;
+  transition:
+    opacity 0.35s var(--ease-out-expo),
+    transform 0.55s var(--ease-out-expo);
+  opacity: 0;
+  transform: scale(0.35);
+}
+.jcard [data-s] {
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 0.3s ease,
+    transform 0.45s var(--ease-out-expo);
+}
+.jcard[data-open="true"] {
+  opacity: 1;
+  transform: none;
+}
+.jcard[data-open="true"] [data-s] {
+  opacity: 1;
+  transform: none;
+}
+.jcard[data-open="true"] [data-s="1"] { transition-delay: 0.08s; }
+.jcard[data-open="true"] [data-s="2"] { transition-delay: 0.16s; }
+.jcard[data-open="true"] [data-s="3"] { transition-delay: 0.24s; }
+.jcard[data-open="true"] [data-s="4"] { transition-delay: 0.32s; }
+.jcard[data-open="true"] [data-s="5"] { transition-delay: 0.4s; }
+.jconnector {
+  stroke-dasharray: 120;
+  stroke-dashoffset: 120;
+  transition: stroke-dashoffset 0.35s ease;
+}
+[data-open="true"] > .jconnector,
+[data-open="true"] .jconnector {
+  stroke-dashoffset: 0;
+}
+
+/* ─── Mode switch: 3D journey vs. lite timeline ─────────────────── */
+/* html[data-mode] is set by an inline script before first paint.   */
+.only-3d {
+  display: none;
+}
+html[data-mode="3d"] .only-3d {
+  display: revert;
+}
+html[data-mode="3d"] .only-lite {
+  display: none !important;
+}
+html[data-mode="3d"] .chapter {
+  height: var(--h, 300vh);
+  position: relative;
+}
+/* chapters are scroll spacers above the fixed canvas: let clicks reach the anchored cards */
+html[data-mode="3d"] #main,
+html[data-mode="3d"] #journey,
+html[data-mode="3d"] .chapter:not(#hero) {
+  pointer-events: none;
+}
+html[data-mode="3d"] #hero {
+  pointer-events: auto;
+}
+html[data-mode="3d"] .chapter-a11y a,
+html[data-mode="3d"] .chapter-a11y button {
+  pointer-events: auto;
+}
+/* In 3D mode the chapter HTML stays readable for assistive tech & search engines. */
+html[data-mode="3d"] .chapter-a11y {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+/* …and a focused link inside it becomes a visible chip, so keyboard users can see where they are. */
+html[data-mode="3d"] .chapter-a11y a:focus-visible,
+html[data-mode="3d"] .chapter-a11y button:focus-visible {
+  position: fixed;
+  left: 1rem;
+  bottom: 1rem;
+  z-index: 60;
+  width: auto;
+  height: auto;
+  background: var(--color-coral);
+  color: var(--color-night-900);
+  font-weight: 700;
+  padding: 0.75rem 1.1rem;
+  border-radius: 999px;
+  outline: 2px solid var(--color-ivory);
+}
+
+/* Intro loader only on the first visit of a session, only in 3D mode */
+.intro-loader {
+  display: none;
+}
+html[data-mode="3d"][data-intro="1"] .intro-loader {
+  display: grid;
+}
+
+/* CSS poster globe (lite mode + before WebGL is ready) */
+.poster-globe {
+  border-radius: 50%;
+  background-image: url("/textures/earth-poster.webp");
+  background-size: 200% 100%;
+  background-position: 30% 50%;
+  box-shadow:
+    inset -40px -20px 80px 10px rgb(2 20 17 / 0.95),
+    inset 10px 6px 30px rgb(95 211 168 / 0.25),
+    0 0 80px 10px rgb(14 159 110 / 0.25);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .poster-globe.spin {
+    animation: poster-spin 90s linear infinite;
+  }
+}
+@keyframes poster-spin {
+  to {
+    background-position: -170% 50%;
+  }
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.6); opacity: 0.9; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+.pulse-ring {
+  animation: pulse-ring 1.8s ease-out infinite;
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+.fade-up {
+  animation: fade-up 0.8s var(--ease-out-expo) both;
+}
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
     scroll-behavior: auto !important;
   }
 }
 
-@keyframes fadeUp {
-  from { transform: translateY(14px); }
-  to { transform: none; }
+select option {
+  background: #031f1b;
+  color: #fffdf8;
+}
+
+/* Frosted glass only where a card floats over the live 3D scene (blur is expensive on phones) */
+.glass-blur {
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+}
+.glass:not(.glass-blur) {
+  background: rgb(10 60 52 / 0.38);
 }

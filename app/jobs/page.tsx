@@ -1,29 +1,31 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { PageHeader } from "@/components/PageHeader";
-import { Container } from "@/components/ui/primitives";
 import { JobBoard } from "@/components/jobs/JobBoard";
-import { jobs } from "@/data/jobs";
+import { Container, PageHeader } from "@/components/ui/primitives";
 
 export const metadata: Metadata = {
-  title: "Jobs Abroad",
-  description: `Browse ${jobs.length} verified overseas vacancies for Kenyans in the UK, Germany, Canada, Poland, Japan, UAE, Qatar and Australia. Filter by country, sector, skill level and visa type.`,
+  title: "Jobs abroad",
+  description: "Sample overseas vacancies for Kenyans in the UK, Germany, Canada, Poland, Japan, the UAE, Qatar and Australia.",
   alternates: { canonical: "/jobs" },
 };
 
 export default function JobsPage() {
   return (
-    <>
+    <main id="main">
       <PageHeader
-        eyebrow="Job board"
-        title="Find your next role abroad"
-        intro="Every listing is from a vetted employer, with a written contract and transparent pay. Filter by country, sector, skill level and visa type."
+        eyebrow="Job board · sample vacancies"
+        title={
+          <>
+            Find your next job <span className="text-coral">abroad.</span>
+          </>
+        }
+        intro="Every role is checked with the employer before it is posted. Filter by country, sector, skill level and visa type."
       />
-      <Container className="py-12 sm:py-16">
-        <Suspense fallback={<div className="h-96 animate-pulse rounded-2xl bg-surface-2" />}>
+      <Container className="pb-24">
+        <Suspense fallback={<div className="h-96" />}>
           <JobBoard />
         </Suspense>
       </Container>
-    </>
+    </main>
   );
 }

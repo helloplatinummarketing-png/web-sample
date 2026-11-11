@@ -1,146 +1,68 @@
-import { unsplash as u, images } from "./site";
+import { u } from "./site";
 
+/** SAMPLE destination data: confirm figures with the client before launch. */
 export type SkillTag = "Skilled" | "Unskilled";
 
 export type Destination = {
   slug: string;
-  name: string;
-  city: string;
-  flag: string; // ISO 3166-1 alpha-2 for the flag image
-  coords: [number, number]; // [longitude, latitude] of main city, for the globe
+  country: string;
+  city: string; // the node on the globe
+  flag: string; // ISO 3166-1 alpha-2 (flag-icons)
+  lat: number;
+  lng: number;
+  region: "europe" | "middle-east" | "asia-pacific" | "north-america";
+  sectors: string[];
+  salary: string;
+  processing: string;
+  openRoles: number;
+  tags: SkillTag[];
   image: string;
   imageAlt: string;
-  summary: string;
-  sectors: string[];
-  processing: string; // SAMPLE average
-  tags: SkillTag[];
-  openRoles: number; // SAMPLE
-  language: string;
 };
-
-export const NAIROBI: [number, number] = [36.8219, -1.2921];
 
 export const destinations: Destination[] = [
   {
-    slug: "uk",
-    name: "United Kingdom",
-    city: "London",
-    flag: "gb",
-    coords: [-0.1278, 51.5074],
-    image: u("1513635269975-59663e0ac1ad"),
-    imageAlt: "Aerial view of London and the River Thames",
-    summary: "Steady demand for carers, nurses and drivers through the Health & Care and Skilled Worker routes.",
-    sectors: ["Healthcare", "Social care", "Logistics"],
-    processing: "8–12 weeks",
-    tags: ["Skilled"],
-    openRoles: 46,
-    language: "IELTS / OET",
+    slug: "uk", country: "United Kingdom", city: "London", flag: "gb", lat: 51.507, lng: -0.128, region: "europe",
+    sectors: ["Care work", "Nursing", "HGV driving"], salary: "£24k – £38k / yr", processing: "8 – 12 weeks", openRoles: 46,
+    tags: ["Skilled"], image: u("1513635269975-59663e0ac1ad"), imageAlt: "London skyline along the River Thames",
   },
   {
-    slug: "germany",
-    name: "Germany",
-    city: "Berlin",
-    flag: "de",
-    coords: [13.405, 52.52],
-    image: u("1560969184-10fe8719e047"),
-    imageAlt: "The Brandenburg Gate in Berlin",
-    summary: "Europe's largest economy is actively recruiting nurses, technicians and IT talent from abroad.",
-    sectors: ["Nursing", "Engineering", "IT"],
-    processing: "10–16 weeks",
-    tags: ["Skilled"],
-    openRoles: 38,
-    language: "German A2–B1",
+    slug: "germany", country: "Germany", city: "Berlin", flag: "de", lat: 52.52, lng: 13.405, region: "europe",
+    sectors: ["Nursing", "IT", "Electrical trades"], salary: "€2,600 – €4,200 / mo", processing: "10 – 16 weeks", openRoles: 31,
+    tags: ["Skilled"], image: u("1560969184-10fe8719e047"), imageAlt: "Brandenburg Gate in Berlin",
   },
   {
-    slug: "canada",
-    name: "Canada",
-    city: "Toronto",
-    flag: "ca",
-    coords: [-79.3832, 43.6532],
-    image: u("1517935706615-2717063c2225"),
-    imageAlt: "Toronto skyline at sunset with the CN Tower",
-    summary: "Employer-sponsored work permits in agriculture, food processing and long-haul transport.",
-    sectors: ["Agriculture", "Food processing", "Transport"],
-    processing: "12–24 weeks",
-    tags: ["Skilled", "Unskilled"],
-    openRoles: 27,
-    language: "IELTS General / CELPIP",
+    slug: "canada", country: "Canada", city: "Toronto", flag: "ca", lat: 43.653, lng: -79.383, region: "north-america",
+    sectors: ["Agriculture", "Food processing", "Trucking"], salary: "CA$17 – CA$28 / hr", processing: "12 – 20 weeks", openRoles: 24,
+    tags: ["Skilled", "Unskilled"], image: u("1517935706615-2717063c2225"), imageAlt: "Toronto skyline at dusk",
   },
   {
-    slug: "poland",
-    name: "Poland",
-    city: "Warsaw",
-    flag: "pl",
-    coords: [21.0122, 52.2297],
-    image: u("1519197924294-4ba991a11128"),
-    imageAlt: "Warsaw city centre at night",
-    summary: "An accessible entry point to the EU with year-round warehouse, factory and welding roles.",
-    sectors: ["Warehousing", "Manufacturing", "Welding"],
-    processing: "8–14 weeks",
-    tags: ["Skilled", "Unskilled"],
-    openRoles: 64,
-    language: "Basic English",
+    slug: "poland", country: "Poland", city: "Warsaw", flag: "pl", lat: 52.23, lng: 21.012, region: "europe",
+    sectors: ["Warehousing", "Welding", "Manufacturing"], salary: "PLN 4,800 – 7,500 / mo", processing: "6 – 10 weeks", openRoles: 58,
+    tags: ["Unskilled", "Skilled"], image: u("1519197924294-4ba991a11128"), imageAlt: "Old town street in Poland",
   },
   {
-    slug: "japan",
-    name: "Japan",
-    city: "Tokyo",
-    flag: "jp",
-    coords: [139.6503, 35.6762],
-    image: u("1540959733332-eab4deabeeaf"),
-    imageAlt: "A busy Tokyo street at dusk",
-    summary: "The Specified Skilled Worker programme offers long-term roles in care, food and manufacturing.",
-    sectors: ["Caregiving", "Manufacturing", "Food service"],
-    processing: "12–20 weeks",
-    tags: ["Skilled"],
-    openRoles: 19,
-    language: "Japanese JLPT N4",
+    slug: "japan", country: "Japan", city: "Tokyo", flag: "jp", lat: 35.676, lng: 139.65, region: "asia-pacific",
+    sectors: ["Caregiving (Kaigo)", "Food service", "Construction"], salary: "¥190k – ¥260k / mo", processing: "16 – 24 weeks", openRoles: 19,
+    tags: ["Skilled"], image: u("1540959733332-eab4deabeeaf"), imageAlt: "Tokyo street lit up at night",
   },
   {
-    slug: "uae",
-    name: "United Arab Emirates",
-    city: "Dubai",
-    flag: "ae",
-    coords: [55.2708, 25.2048],
-    image: u("1580674684081-7617fbf3d745"),
-    imageAlt: "Downtown Dubai skyline with the Burj Khalifa",
-    summary: "Fast hiring cycles in hospitality, retail, security and construction, often with housing included.",
-    sectors: ["Hospitality", "Security", "Construction"],
-    processing: "3–6 weeks",
-    tags: ["Skilled", "Unskilled"],
-    openRoles: 82,
-    language: "Basic English",
+    slug: "uae", country: "United Arab Emirates", city: "Dubai", flag: "ae", lat: 25.205, lng: 55.271, region: "middle-east",
+    sectors: ["Hospitality", "Security", "Retail"], salary: "AED 1,800 – 4,500 / mo", processing: "3 – 6 weeks", openRoles: 72,
+    tags: ["Unskilled", "Skilled"], image: u("1580674684081-7617fbf3d745"), imageAlt: "Dubai skyline with modern towers",
   },
   {
-    slug: "qatar",
-    name: "Qatar",
-    city: "Doha",
-    flag: "qa",
-    coords: [51.531, 25.2854],
-    image: images.airport,
-    imageAlt: "A traveller looking at an airport departures board",
-    summary: "Opportunities in facilities management, hospitality and security, with accommodation and transport.",
-    sectors: ["Hospitality", "Facilities", "Security"],
-    processing: "4–8 weeks",
-    tags: ["Skilled", "Unskilled"],
-    openRoles: 41,
-    language: "Basic English",
+    slug: "qatar", country: "Qatar", city: "Doha", flag: "qa", lat: 25.285, lng: 51.531, region: "middle-east",
+    sectors: ["Security", "Hospitality", "Facilities"], salary: "QAR 1,500 – 4,000 / mo", processing: "4 – 6 weeks", openRoles: 40,
+    tags: ["Unskilled", "Skilled"], image: u("1436491865332-7a61a109cc05"), imageAlt: "Aircraft wing above the clouds",
   },
   {
-    slug: "australia",
-    name: "Australia",
-    city: "Sydney",
-    flag: "au",
-    coords: [151.2093, -33.8688],
-    image: u("1506973035872-a4ec16b8e8d9"),
-    imageAlt: "Sydney Harbour with the Opera House",
-    summary: "Employer-sponsored Skills in Demand visas for qualified tradespeople, nurses and engineers.",
-    sectors: ["Trades", "Healthcare", "Engineering"],
-    processing: "12–20 weeks",
-    tags: ["Skilled"],
-    openRoles: 23,
-    language: "IELTS / PTE",
+    slug: "australia", country: "Australia", city: "Sydney", flag: "au", lat: -33.869, lng: 151.209, region: "asia-pacific",
+    sectors: ["Electrical", "Aged care", "Meat processing"], salary: "A$28 – A$45 / hr", processing: "12 – 20 weeks", openRoles: 17,
+    tags: ["Skilled"], image: u("1506973035872-a4ec16b8e8d9"), imageAlt: "Sydney Opera House and harbour",
   },
 ];
+
+export const NAIROBI = { lat: -1.286, lng: 36.817 };
 
 export const destinationBySlug = (slug: string) => destinations.find((d) => d.slug === slug);

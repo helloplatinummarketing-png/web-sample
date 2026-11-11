@@ -1,23 +1,21 @@
-import Link from "next/link";
-import { Compass } from "lucide-react";
-import { Container, btn } from "@/components/ui/primitives";
+import { ButtonLink, Container } from "@/components/ui/primitives";
 
 export default function NotFound() {
   return (
-    <Container className="flex flex-col items-center py-28 text-center">
-      <span className="grid h-16 w-16 place-items-center rounded-2xl bg-navy text-gold">
-        <Compass className="h-8 w-8" aria-hidden="true" />
-      </span>
-      <h1 className="mt-6 text-4xl font-bold text-fg">This route doesn&apos;t exist</h1>
-      <p className="mt-3 max-w-md text-muted">The page you&apos;re looking for may have moved. Let&apos;s get you back on course.</p>
-      <div className="mt-8 flex gap-3">
-        <Link href="/" className={btn("gold")}>
-          Back to home
-        </Link>
-        <Link href="/jobs" className={btn("outline")}>
-          Browse jobs
-        </Link>
-      </div>
-    </Container>
+    <main id="main">
+      <Container className="grid min-h-[80vh] place-items-center text-center">
+        <div>
+          <p className="font-mono text-sm text-coral-300">404 · Off the map</p>
+          <h1 className="mt-3 text-4xl font-bold text-ivory sm:text-6xl">This route doesn&apos;t exist.</h1>
+          <p className="mt-4 text-sand/80">Let&apos;s get you back to Nairobi.</p>
+          <div className="mt-8 flex justify-center gap-3">
+            <ButtonLink href="/">Back home</ButtonLink>
+            <ButtonLink href="/jobs" variant="ghost">
+              Find jobs abroad
+            </ButtonLink>
+          </div>
+        </div>
+      </Container>
+    </main>
   );
 }

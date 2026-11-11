@@ -1,94 +1,64 @@
+import { Clock, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import type { Metadata } from "next";
-import { Clock, Mail, MapPin, Phone } from "lucide-react";
+import { ContactForm } from "@/components/forms/ContactForm";
 import { site } from "@/data/site";
 import { whatsappLink } from "@/lib/format";
-import { PageHeader } from "@/components/PageHeader";
-import { Container, card } from "@/components/ui/primitives";
-import { Reveal } from "@/components/ui/Reveal";
-import { WhatsAppIcon } from "@/components/ui/SocialIcons";
-import { ContactForm } from "@/components/forms/ContactForm";
+import { Container, PageHeader } from "@/components/ui/primitives";
 
 export const metadata: Metadata = {
-  title: "Contact Us",
-  description: `Speak to a licensed advisor by phone, WhatsApp or email, or visit our Nairobi office. ${site.licence}.`,
+  title: "Contact",
+  description: `Call, WhatsApp, email or visit ${site.name} in Nairobi.`,
   alternates: { canonical: "/contact" },
 };
 
-const cards = [
-  { icon: Phone, title: "Call us", value: site.phoneDisplay, href: `tel:+${site.phoneDigits}` },
-  { icon: null, title: "WhatsApp", value: "Chat with an advisor", href: whatsappLink(site.phoneDigits, site.whatsappMessage), external: true },
-  { icon: Mail, title: "Email", value: site.email, href: `mailto:${site.email}` },
-  { icon: MapPin, title: "Visit us", value: site.address },
-];
-
 export default function ContactPage() {
+  const items = [
+    { icon: Phone, label: "Call", value: site.phoneDisplay, href: `tel:+${site.phoneDigits}` },
+    { icon: MessageCircle, label: "WhatsApp", value: "Chat with an advisor", href: whatsappLink(site.phoneDigits, site.whatsappMessage) },
+    { icon: Mail, label: "Email", value: site.email, href: `mailto:${site.email}` },
+    { icon: MapPin, label: "Office", value: site.address },
+    { icon: Clock, label: "Hours", value: site.hours },
+  ];
   return (
-    <>
-      <PageHeader eyebrow="Contact" title="Talk to a real advisor" intro="Questions about a job, a visa or our fees? We're happy to help, in English or Kiswahili." />
-
-      <Container className="py-12 sm:py-16">
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {cards.map(({ icon: Icon, title, value, href, external }, i) => {
-            const inner = (
+    <main id="main">
+      <PageHeader
+        eyebrow="Contact"
+        title={
+          <>
+            Talk to a <span className="text-coral">real advisor.</span>
+          </>
+        }
+        intro="Visit us in Nairobi, call, or send a message. We reply within one working day."
+      />
+      <Container className="grid gap-8 pb-24 lg:grid-cols-[1fr_1.2fr]">
+        <ul className="space-y-3">
+          {items.map((i) => {
+            const body = (
               <>
-                <span className="grid h-12 w-12 place-items-center rounded-xl bg-navy text-gold">
-                  {Icon ? <Icon className="h-5 w-5" aria-hidden="true" /> : <WhatsAppIcon className="h-5 w-5" />}
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-coral/15 text-coral">
+                  <i.icon className="h-5 w-5" aria-hidden="true" />
                 </span>
-                <span className="mt-4 block font-display font-semibold text-fg">{title}</span>
-                <span className="mt-1 block break-words text-sm text-muted">{value}</span>
+                <span>
+                  <span className="block font-mono text-[10px] uppercase tracking-wider text-jade-300">{i.label}</span>
+                  <span className="break-all font-semibold text-ivory">{i.value}</span>
+                </span>
               </>
             );
-            const cls = `${card} block h-full p-6 transition hover:-translate-y-1 hover:border-royal/40 dark:hover:border-gold/40`;
             return (
-              <Reveal as="li" key={title} delay={i * 0.06}>
-                {href ? (
-                  <a href={href} className={cls} {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
-                    {inner}
+              <li key={i.label}>
+                {i.href ? (
+                  <a href={i.href} className="glass flex items-center gap-4 rounded-2xl p-4 transition hover:border-coral/60" {...(i.href.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
+                    {body}
                   </a>
                 ) : (
-                  <div className={cls}>{inner}</div>
+                  <div className="glass flex items-center gap-4 rounded-2xl p-4">{body}</div>
                 )}
-              </Reveal>
+              </li>
             );
           })}
         </ul>
-
-        <div className="mt-10 grid gap-8 lg:grid-cols-[1.15fr_1fr]">
-          <Reveal className={`${card} p-6 sm:p-10`}>
-            <h2 className="text-2xl font-bold text-fg">Send us a message</h2>
-            <p className="mt-1 text-sm text-muted">We reply within one working day.</p>
-            <div className="mt-8">
-              <ContactForm />
-            </div>
-          </Reveal>
-
-          <div className="flex flex-col gap-6">
-            <Reveal className={`${card} p-6`}>
-              <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-fg">
-                <Clock className="h-5 w-5 text-royal dark:text-gold" aria-hidden="true" /> Office hours
-              </h2>
-              <dl className="mt-4 divide-y divide-line text-sm">
-                {site.hours.map((h) => (
-                  <div key={h.days} className="flex justify-between gap-4 py-2.5">
-                    <dt className="text-muted">{h.days}</dt>
-                    <dd className="font-semibold text-fg">{h.time}</dd>
-                  </div>
-                ))}
-              </dl>
-            </Reveal>
-            <Reveal delay={0.08} className={`${card} flex-1 overflow-hidden`}>
-              <iframe
-                title={`Map showing our office in ${site.mapQuery}`}
-                src={`https://maps.google.com/maps?q=${encodeURIComponent(site.mapQuery)}&z=13&output=embed`}
-                className="h-full min-h-[320px] w-full border-0"
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                allowFullScreen
-              />
-            </Reveal>
-          </div>
-        </div>
+        <ContactForm />
       </Container>
-    </>
+    </main>
   );
 }

@@ -1,151 +1,101 @@
 "use client";
 
+import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { AnimatePresence, m } from "framer-motion";
-import { ArrowRight, Menu, X } from "lucide-react";
 import { navLinks } from "@/data/site";
 import { useI18n } from "@/lib/i18n";
-import { Container, btn } from "../ui/primitives";
+import { btn } from "../ui/primitives";
 import { Logo } from "./Logo";
-import { LanguageToggle, ThemeToggle } from "./Toggles";
 
 export function Navbar() {
-  const pathname = usePathname();
-  const { t } = useI18n();
+  const { t, lang, setLang } = useI18n();
+  const path = usePathname();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [prevPath, setPrevPath] = useState(pathname);
 
-  if (prevPath !== pathname) {
-    setPrevPath(pathname);
-    setOpen(false);
-  }
-
+  useEffect(() => setOpen(false), [path]);
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    const on = () => setScrolled(window.scrollY > 12);
+    on();
+    window.addEventListener("scroll", on, { passive: true });
+    return () => window.removeEventListener("scroll", on);
   }, []);
-
   useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, []);
 
-  const isActive = (href: string) => (href === "/" ? pathname === "/" : !href.includes("#") && pathname.startsWith(href));
+  const LangToggle = (
+    <button
+      type="button"
+      onClick={() => setLang(lang === "en" ? "sw" : "en")}
+      aria-label={`${t("ui.lang")}: ${lang === "en" ? "Kiswahili" : "English"}`}
+      className="inline-flex h-9 items-center rounded-full border border-jade/50 px-1 font-mono text-[11px] font-semibold"
+    >
+      <span className={`rounded-full px-2 py-1 transition ${lang === "en" ? "bg-coral text-night-900" : "text-sand/70"}`}>EN</span>
+      <span className={`rounded-full px-2 py-1 transition ${lang === "sw" ? "bg-coral text-night-900" : "text-sand/70"}`}>SW</span>
+    </button>
+  );
 
   return (
-    <header
-      className={`sticky top-0 z-50 border-b transition-all duration-300 ${
-        scrolled || open
-          ? "border-line bg-bg/75 shadow-[0_8px_30px_-12px_rgba(11,27,63,0.18)] backdrop-blur-xl backdrop-saturate-150"
-          : "border-transparent bg-bg/40 backdrop-blur-md"
-      }`}
-    >
-      <a
-        href="#main"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-gold focus:px-4 focus:py-2 focus:font-semibold focus:text-navy"
-      >
-        Skip to main content
+    <header className={`fixed inset-x-0 top-0 z-50 transition duration-300 ${scrolled || open ? "bg-night-950/80 backdrop-blur-xl" : ""}`}>
+      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-coral focus:px-4 focus:py-2 focus:font-bold focus:text-night-900">
+        Skip to content
       </a>
-      <Container className="flex h-16 items-center justify-between gap-3 lg:h-[72px]">
+      <nav aria-label="Main" className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Logo />
-
-        <nav aria-label="Main" className="hidden xl:block">
-          <ul className="flex items-center gap-0.5">
-            {navLinks.map((l) => {
-              const active = isActive(l.href);
-              return (
-                <li key={l.href}>
-                  <Link
-                    href={l.href}
-                    aria-current={active ? "page" : undefined}
-                    className={`relative block rounded-lg px-3.5 py-2 text-sm font-medium transition-colors ${
-                      active ? "text-fg" : "text-muted hover:text-fg"
-                    }`}
-                  >
-                    {t(l.key)}
-                    {active && (
-                      <m.span
-                        layoutId="nav-underline"
-                        className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-gold"
-                        transition={{ type: "spring", stiffness: 400, damping: 32 }}
-                      />
-                    )}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
-
+        <ul className="hidden items-center gap-1 lg:flex">
+          {navLinks.map((l) => {
+            const active = l.href === "/" ? path === "/" : path.startsWith(l.href);
+            return (
+              <li key={l.href}>
+                <Link
+                  href={l.href}
+                  aria-current={active ? "page" : undefined}
+                  className={`rounded-full px-3.5 py-2 text-sm font-semibold transition ${active ? "text-coral" : "text-sand/85 hover:text-ivory"}`}
+                >
+                  {t(l.key)}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
         <div className="flex items-center gap-2">
-          <div className="hidden items-center gap-2 sm:flex">
-            <LanguageToggle />
-            <ThemeToggle />
-          </div>
-          <Link href="/apply" className={btn("gold", "px-3.5 py-2.5 sm:px-4")}>
-            {t("cta.apply")} <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          {LangToggle}
+          <Link href="/apply" className={btn("primary", "whitespace-nowrap px-5 py-2.5 max-sm:!hidden")}>
+            {t("cta.apply")}
           </Link>
           <button
             type="button"
-            className="grid h-10 w-10 place-items-center rounded-xl border border-line bg-surface/70 text-fg xl:hidden"
+            className="grid h-10 w-10 place-items-center rounded-full border border-jade/50 lg:hidden"
             aria-expanded={open}
-            aria-controls="mobile-nav"
+            aria-controls="mobile-menu"
             aria-label={open ? t("ui.menu.close") : t("ui.menu.open")}
             onClick={() => setOpen((o) => !o)}
           >
             {open ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
           </button>
         </div>
-      </Container>
-
-      <AnimatePresence>
-        {open && (
-          <m.nav
-            id="mobile-nav"
-            aria-label="Mobile"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="overflow-hidden border-t border-line xl:hidden"
-          >
-            <Container className="pb-5 pt-3">
-              <ul className="grid gap-1">
-                {navLinks.map((l) => (
-                  <li key={l.href}>
-                    <Link
-                      href={l.href}
-                      aria-current={isActive(l.href) ? "page" : undefined}
-                      className={`flex items-center justify-between rounded-xl px-4 py-3 text-base font-medium ${
-                        isActive(l.href) ? "bg-surface-2 text-fg" : "text-muted hover:bg-surface-2 hover:text-fg"
-                      }`}
-                    >
-                      {t(l.key)}
-                      {isActive(l.href) && <span className="h-1.5 w-1.5 rounded-full bg-gold" aria-hidden="true" />}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-4 flex items-center gap-2 sm:hidden">
-                <LanguageToggle />
-                <ThemeToggle />
-              </div>
-              <Link href="/apply" className={btn("gold", "mt-4 w-full sm:hidden")}>
-                {t("cta.apply")} <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </Link>
-            </Container>
-          </m.nav>
-        )}
-      </AnimatePresence>
+      </nav>
+      {open && (
+        <div id="mobile-menu" className="border-t border-jade/20 bg-night-950/95 px-4 pb-6 pt-2 backdrop-blur-xl lg:hidden">
+          <ul className="space-y-1">
+            {navLinks.map((l) => (
+              <li key={l.href}>
+                <Link href={l.href} className="block rounded-xl px-3 py-3 text-base font-semibold text-sand hover:bg-white/5">
+                  {t(l.key)}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <Link href="/apply" className={btn("primary", "mt-4 w-full")}>
+            {t("cta.apply")}
+          </Link>
+        </div>
+      )}
     </header>
   );
 }

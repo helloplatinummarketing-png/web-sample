@@ -1,474 +1,359 @@
 "use client";
 
-import Link from "next/link";
+import { ArrowLeft, ArrowRight, Check, Pencil } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { AnimatePresence, m } from "framer-motion";
-import { ArrowLeft, ArrowRight, Check, Loader2, Pencil, Sparkles } from "lucide-react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import { destinations, destinationBySlug } from "@/data/destinations";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { destinationBySlug, destinations, NAIROBI } from "@/data/destinations";
+import { slerpLatLng } from "@/lib/geo";
+import { destinationNodes, nairobiNode } from "@/data/journey";
 import { jobBySlug } from "@/data/jobs";
-import { availability, education, educationLabel, experience, experienceLabel, fieldLabel, fields, passportStatus, visaTypes } from "@/data/options";
+import { availability, education, experience, fields, passportStatus, visaTypes } from "@/data/options";
 import { site } from "@/data/site";
 import { EMAIL_RE, makeReference, normaliseKenyanPhone } from "@/lib/format";
-import { btn, card } from "../ui/primitives";
-import { ErrorText, Field, a11y, inputCls } from "./Field";
+import { scrollToY } from "@/lib/scroll";
+import { JourneyGlobe } from "../journey/JourneyGlobe";
+import { btn, Flag } from "../ui/primitives";
+import { a11y, Field, inputCls } from "./Field";
 import { FileDrop } from "./FileDrop";
-import { SuccessScreen } from "./SuccessScreen";
+import { BoardingPass } from "./BoardingPass";
 
-type Values = {
-  fullName: string;
-  email: string;
-  phone: string;
-  county: string;
-  passport: string;
-  field: string;
-  experience: string;
-  education: string;
-  jobTitle: string;
-  languages: string;
-  country: string;
-  visaType: string;
-  preferredJob: string;
-  availability: string;
+const STEPS = ["Personal", "Career", "Destination & visa", "Documents", "Review"] as const;
+const quizToField: Record<string, string> = { health: "healthcare", trades: "trades", hospitality: "hospitality", logistics: "logistics", it: "it", general: "general" };
+
+type Data = {
+  name: string; phone: string; email: string; county: string;
+  field: string; experience: string; education: string; jobTitle: string;
+  country: string; visa: string; passport: string; availability: string; job: string;
   consent: boolean;
 };
-type FileKey = "cv" | "passportCopy" | "certificates";
-type Files = Record<FileKey, File[]>;
-type ErrKey = keyof Values | FileKey;
-type Errors = Partial<Record<ErrKey, string>>;
+type Files = { cv: File[]; passport: File[]; certs: File[] };
 
-const STEPS = [
-  { title: "Personal details", short: "Personal" },
-  { title: "Career details", short: "Career" },
-  { title: "Destination & visa", short: "Destination" },
-  { title: "Upload documents", short: "Documents" },
-  { title: "Review & submit", short: "Review" },
-] as const;
+const empty: Data = {
+  name: "", phone: "", email: "", county: "", field: "", experience: "", education: "", jobTitle: "",
+  country: "", visa: "", passport: "", availability: "", job: "", consent: false,
+};
 
-function validateStep(step: number, v: Values, f: Files): Errors {
-  const e: Errors = {};
-  if (step === 0) {
-    const name = v.fullName.trim();
-    if (name.length < 3) e.fullName = "Please enter your full name.";
-    else if (!name.includes(" ")) e.fullName = "Please include both your first and last name.";
-    if (!EMAIL_RE.test(v.email.trim())) e.email = "Enter a valid email address, e.g. jane@example.com.";
-    if (!normaliseKenyanPhone(v.phone)) e.phone = "Enter a Kenyan mobile number, e.g. +254 712 345 678.";
-    if (!v.county.trim()) e.county = "Tell us which county you live in.";
-    if (!v.passport) e.passport = "Select your passport status.";
-  }
-  if (step === 1) {
-    if (!v.field) e.field = "Select your professional field.";
-    if (!v.experience) e.experience = "Select your years of experience.";
-    if (!v.education) e.education = "Select your highest education level.";
-    if (!v.jobTitle.trim()) e.jobTitle = "Enter your current or most recent job title.";
-  }
-  if (step === 2) {
-    if (!v.country) e.country = "Select a destination country.";
-    if (!v.visaType) e.visaType = "Select a visa or programme type.";
-    if (!v.availability) e.availability = "Let us know when you could start.";
-  }
-  if (step === 3) {
-    if (f.cv.length === 0) e.cv = "Please upload your CV.";
-    if (f.passportCopy.length === 0 && v.passport === passportStatus[0]) e.passportCopy = "Please upload a copy of your passport bio page.";
-  }
-  if (step === 4) {
-    if (!v.consent) e.consent = "Please give consent so we can process your application.";
-  }
-  return e;
-}
+const sel = (invalid?: boolean) => `${inputCls(invalid)} appearance-none`;
 
 export function ApplyWizard() {
   const params = useSearchParams();
-  const job = jobBySlug(params.get("job") ?? "");
-  const fromEligibility = params.get("from") === "eligibility";
-  const suggested = (params.get("programmes") ?? "").split("|").filter(Boolean);
-  const pick = <T extends string>(val: string | null, allowed: readonly T[]) => (val && (allowed as readonly string[]).includes(val) ? val : "");
-
-  const [values, setValues] = useState<Values>(() => ({
-    fullName: "",
-    email: "",
-    phone: "+254 ",
-    county: "",
-    passport: "",
-    field: pick(params.get("field"), fields.map((x) => x.value)),
-    experience: pick(params.get("experience"), experience.map((x) => x.value)),
-    education: pick(params.get("education"), education.map((x) => x.value)),
-    jobTitle: "",
-    languages: "English, Kiswahili",
-    country: pick(params.get("country"), destinations.map((d) => d.slug)),
-    visaType: pick(params.get("visa"), visaTypes),
-    preferredJob: job ? `${job.title} (${job.city})` : "",
-    availability: "",
-    consent: false,
-  }));
-  const [files, setFiles] = useState<Files>({ cv: [], passportCopy: [], certificates: [] });
-  const [errors, setErrors] = useState<Errors>({});
   const [step, setStep] = useState(0);
-  const [dir, setDir] = useState(1);
-  const [status, setStatus] = useState<"idle" | "submitting" | "done">("idle");
-  const [reference, setReference] = useState("");
-  const headingRef = useRef<HTMLHeadingElement>(null);
-  const topRef = useRef<HTMLDivElement>(null);
-  const firstRender = useRef(true);
+  const [d, setD] = useState<Data>(empty);
+  const [files, setFiles] = useState<Files>({ cv: [], passport: [], certs: [] });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [ref, setRef] = useState<string | null>(null);
+  const top = useRef<HTMLDivElement>(null);
 
+  // pre-fill from the eligibility quiz, a destination card or a job page
   useEffect(() => {
-    if (firstRender.current) {
-      firstRender.current = false;
-      return;
+    const job = jobBySlug(params.get("job") ?? "");
+    const f = params.get("field") ?? "";
+    setD((p) => ({
+      ...p,
+      country: destinationBySlug(params.get("country") ?? "") ? params.get("country")! : p.country,
+      field: fields.some((x) => x.value === f) ? f : quizToField[f] ?? p.field,
+      job: job?.slug ?? "",
+      visa: job?.visaType ?? p.visa,
+      jobTitle: p.jobTitle,
+    }));
+  }, [params]);
+
+  const set = <K extends keyof Data>(k: K, v: Data[K]) => {
+    setD((p) => ({ ...p, [k]: v }));
+    setErrors((e) => ({ ...e, [k]: "" }));
+  };
+
+  const validate = (s: number) => {
+    const e: Record<string, string> = {};
+    if (s === 0) {
+      if (d.name.trim().split(/\s+/).length < 2) e.name = "Please enter your first and last name.";
+      if (!normaliseKenyanPhone(d.phone)) e.phone = "Enter a Kenyan number, e.g. 0712 345 678.";
+      if (!EMAIL_RE.test(d.email.trim())) e.email = "Enter a valid email address.";
     }
-    headingRef.current?.focus({ preventScroll: true });
-    topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [step]);
-
-  const set = <K extends keyof Values>(k: K, val: Values[K]) => {
-    setValues((v) => ({ ...v, [k]: val }));
-    if (errors[k]) setErrors((e) => ({ ...e, [k]: undefined }));
-  };
-
-  const blur = (k: keyof Values) => {
-    const err = validateStep(step, values, files)[k];
-    setErrors((e) => ({ ...e, [k]: err }));
-  };
-
-  const goto = (n: number) => {
-    setDir(n > step ? 1 : -1);
-    setStep(n);
-  };
-
-  const next = () => {
-    const errs = validateStep(step, values, files);
-    setErrors(errs);
-    const first = Object.keys(errs)[0];
+    if (s === 1) {
+      if (!d.field) e.field = "Choose your field of work.";
+      if (!d.experience) e.experience = "Choose your experience.";
+      if (!d.education) e.education = "Choose your highest qualification.";
+    }
+    if (s === 2) {
+      if (!d.country) e.country = "Choose a destination country.";
+      if (!d.visa) e.visa = "Choose a visa type.";
+      if (!d.passport) e.passport = "Tell us about your passport.";
+      if (!d.availability) e.availability = "When can you travel?";
+    }
+    if (s === 3) {
+      if (!files.cv.length) e.cv = "Please upload your CV.";
+      if (!files.passport.length) e.passportFile = "Please upload your passport bio page.";
+    }
+    if (s === 4 && !d.consent) e.consent = "Please confirm so we can process your application.";
+    setErrors(e);
+    const first = Object.keys(e)[0];
     if (first) {
-      document.getElementById(first)?.focus();
-      return;
+      const id = first === "passportFile" ? "passport-file" : first;
+      requestAnimationFrame(() => document.getElementById(id)?.focus());
     }
-    goto(step + 1);
+    return !first;
   };
 
-  const submit = async () => {
-    const errs = validateStep(4, values, files);
-    setErrors(errs);
-    if (Object.keys(errs).length) {
-      document.getElementById("consent")?.focus();
-      return;
-    }
-    setStatus("submitting");
-    await new Promise((r) => setTimeout(r, 1500)); // demo only: no backend
-    setReference(makeReference(site.refPrefix));
-    setStatus("done");
-    topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const goTo = (s: number) => {
+    setStep(s);
+    const y = (top.current?.getBoundingClientRect().top ?? 0) + window.scrollY - 90;
+    scrollToY(y);
+  };
+  const next = () => validate(step) && goTo(step + 1);
+  const submit = () => {
+    if (!validate(4)) return;
+    const r = makeReference(site.refPrefix);
+    try {
+      localStorage.setItem("last-application", JSON.stringify({ ref: r, phone: normaliseKenyanPhone(d.phone), country: d.country }));
+    } catch {}
+    setRef(r);
+    goTo(5);
   };
 
-  if (status === "done") {
-    return (
-      <div ref={topRef} className="scroll-mt-24">
-        <SuccessScreen name={values.fullName.trim().split(" ")[0]} reference={reference} phone={normaliseKenyanPhone(values.phone) ?? ""} email={values.email} />
-      </div>
-    );
-  }
-
-  const textInput = (k: keyof Values, label: string, opts: { type?: string; placeholder?: string; hint?: string; required?: boolean; auto?: string; inputMode?: "email" | "tel" | "text" } = {}) => {
-    const required = opts.required ?? true;
-    return (
-      <Field id={k} label={label} required={required} hint={opts.hint} error={errors[k]}>
-        <input
-          {...a11y(k, errors[k], opts.hint, required)}
-          type={opts.type ?? "text"}
-          inputMode={opts.inputMode}
-          autoComplete={opts.auto}
-          placeholder={opts.placeholder}
-          value={values[k] as string}
-          onChange={(e) => set(k, e.target.value as never)}
-          onBlur={() => blur(k)}
-          className={inputCls(!!errors[k])}
-        />
-      </Field>
-    );
-  };
-
-  const select = (k: keyof Values, label: string, options: readonly (string | { value: string; label: string })[], placeholder: string, required = true) => (
-    <Field id={k} label={label} required={required} error={errors[k]}>
-      <select
-        {...a11y(k, errors[k], undefined, required)}
-        value={values[k] as string}
-        onChange={(e) => set(k, e.target.value as never)}
-        onBlur={() => blur(k)}
-        className={inputCls(!!errors[k])}
-      >
-        <option value="">{placeholder}</option>
-        {options.map((o) => {
-          const v = typeof o === "string" ? o : o.value;
-          const l = typeof o === "string" ? o : o.label;
-          return (
-            <option key={v} value={v}>
-              {l}
-            </option>
-          );
-        })}
-      </select>
-    </Field>
+  const dest = destinationBySlug(d.country);
+  const job = jobBySlug(d.job);
+  // mini globe: the line from Nairobi to the chosen country grows as the form progresses
+  const globe = useMemo(
+    () => ({
+      nodes: [nairobiNode, ...destinationNodes],
+      path: dest ? ["nairobi", dest.slug] : [],
+      line: dest ? Math.min(1, (ref ? 5 : step) / 4) : 0,
+      focus: dest ? slerpLatLng(NAIROBI, dest, 0.5) : NAIROBI,
+      active: ref && dest ? dest.slug : "nairobi",
+    }),
+    [dest, step, ref]
   );
 
-  const setFileKey = (k: FileKey) => (list: File[], err?: string) => {
-    setFiles((f) => ({ ...f, [k]: list }));
-    setErrors((e) => ({ ...e, [k]: err }));
-  };
-
-  const progress = (step + 1) / STEPS.length;
-  const dest = destinationBySlug(values.country);
-
   return (
-    <div ref={topRef} className="scroll-mt-24">
-      {/* Progress */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between text-sm">
-          <p className="font-semibold text-fg">
-            Step {step + 1} of {STEPS.length}
-          </p>
-          <p className="text-muted">{Math.round(progress * 100)}% complete</p>
-        </div>
-        <div
-          className="mt-3 h-2 overflow-hidden rounded-full bg-surface-2"
-          role="progressbar"
-          aria-label="Application progress"
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={Math.round(progress * 100)}
-        >
-          <m.div className="h-full rounded-full bg-gradient-to-r from-royal via-royal to-gold" animate={{ width: `${progress * 100}%` }} transition={{ duration: 0.45 }} />
-        </div>
-        <ol className="mt-4 hidden grid-cols-5 gap-2 sm:grid">
-          {STEPS.map((s, i) => {
-            const state = i < step ? "done" : i === step ? "current" : "todo";
-            return (
-              <li key={s.title} aria-current={state === "current" ? "step" : undefined}>
-                <button
-                  type="button"
-                  disabled={i > step}
-                  onClick={() => i < step && goto(i)}
-                  className="flex w-full items-center gap-2 text-left text-xs font-semibold disabled:cursor-default"
-                >
-                  <span
-                    className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[11px] ${
-                      state === "done"
-                        ? "bg-success text-white"
-                        : state === "current"
-                          ? "bg-navy text-gold ring-2 ring-gold dark:bg-gold dark:text-navy"
-                          : "bg-surface-2 text-muted"
-                    }`}
-                  >
-                    {state === "done" ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : i + 1}
+    <div ref={top} className="grid gap-8 lg:grid-cols-[1fr_340px]">
+      <div className="min-w-0">
+        {ref && dest ? (
+          <BoardingPass reference={ref} name={d.name} destination={dest} phone={normaliseKenyanPhone(d.phone) ?? d.phone} />
+        ) : (
+          <div className="glass rounded-3xl p-5 sm:p-8">
+            <ol className="flex gap-1.5" aria-label="Application progress">
+              {STEPS.map((s, i) => (
+                <li key={s} className="flex-1" aria-current={i === step ? "step" : undefined}>
+                  <span className={`block h-1 rounded-full transition-colors ${i < step ? "bg-coral" : i === step ? "bg-coral/60" : "bg-white/15"}`} />
+                  <span className={`mt-2 hidden font-mono text-[10px] uppercase tracking-wider sm:block ${i === step ? "text-coral-300" : "text-sand/50"}`}>
+                    0{i + 1} {s}
                   </span>
-                  <span className={state === "todo" ? "text-muted" : "text-fg"}>{s.short}</span>
-                </button>
-              </li>
-            );
-          })}
-        </ol>
-      </div>
-
-      {fromEligibility && step === 0 && (
-        <div className="mb-6 flex gap-3 rounded-xl border border-gold/40 bg-gold-50 p-4 text-sm text-fg dark:bg-gold/10">
-          <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-[#8a5d00] dark:text-gold" aria-hidden="true" />
-          <div>
-            <p className="font-semibold">We&apos;ve pre-filled your answers from the eligibility checker.</p>
-            {suggested.length > 0 && <p className="mt-1 text-muted">Suggested routes: {suggested.join(" · ")}</p>}
-          </div>
-        </div>
-      )}
-      {job && step === 0 && (
-        <div className="mb-6 rounded-xl border border-royal/30 bg-royal-50 p-4 text-sm text-fg dark:bg-royal/15">
-          Applying for <strong>{job.title}</strong> in {job.city}. We&apos;ve pre-filled the destination for you.
-        </div>
-      )}
-
-      <div className="relative overflow-hidden">
-        <AnimatePresence mode="wait" custom={dir} initial={false}>
-          <m.section
-            key={step}
-            initial={{ opacity: 0, x: dir * 40 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: dir * -40 }}
-            transition={{ duration: 0.28 }}
-            aria-labelledby="step-title"
-          >
-            <h2 id="step-title" ref={headingRef} tabIndex={-1} className="text-2xl font-bold text-fg focus:outline-none">
-              {STEPS[step].title}
+                </li>
+              ))}
+            </ol>
+            <h2 className="mt-6 font-display text-2xl font-bold text-ivory" tabIndex={-1}>
+              <span className="font-mono text-sm text-coral-300">Step 0{step + 1} / 05 · </span>
+              {STEPS[step]}
             </h2>
 
-            <div className="mt-6 grid gap-5 sm:grid-cols-2">
+            <form
+              className="mt-6"
+              noValidate
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (step < 4) next();
+                else submit();
+              }}
+            >
               {step === 0 && (
-                <>
-                  <div className="sm:col-span-2">{textInput("fullName", "Full name (as on passport)", { placeholder: "e.g. Jane Wanjiku Mwangi", auto: "name" })}</div>
-                  {textInput("email", "Email address", { type: "email", inputMode: "email", placeholder: "you@example.com", auto: "email" })}
-                  {textInput("phone", "Phone / WhatsApp", { type: "tel", inputMode: "tel", placeholder: "+254 712 345 678", hint: "Kenyan mobile, format +254 7XX XXX XXX", auto: "tel" })}
-                  {textInput("county", "County of residence", { placeholder: "e.g. Nairobi, Kiambu, Mombasa", auto: "address-level1" })}
-                  {select("passport", "Passport status", passportStatus, "Select status…")}
-                </>
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <Field id="name" label="Full name" required error={errors.name} className="sm:col-span-2">
+                    <input {...a11y("name", errors.name, undefined, true)} autoComplete="name" value={d.name} onChange={(e) => set("name", e.target.value)} className={inputCls(!!errors.name)} />
+                  </Field>
+                  <Field id="phone" label="Phone (WhatsApp)" required hint="We'll contact you on this number." error={errors.phone}>
+                    <input {...a11y("phone", errors.phone, "hint", true)} type="tel" inputMode="tel" autoComplete="tel" placeholder="07XX XXX XXX" value={d.phone} onChange={(e) => set("phone", e.target.value)} className={inputCls(!!errors.phone)} />
+                  </Field>
+                  <Field id="email" label="Email" required error={errors.email}>
+                    <input {...a11y("email", errors.email, undefined, true)} type="email" autoComplete="email" value={d.email} onChange={(e) => set("email", e.target.value)} className={inputCls(!!errors.email)} />
+                  </Field>
+                  <Field id="county" label="County of residence">
+                    <input {...a11y("county")} value={d.county} onChange={(e) => set("county", e.target.value)} className={inputCls()} placeholder="e.g. Nakuru" />
+                  </Field>
+                </div>
               )}
 
               {step === 1 && (
-                <>
-                  <div className="sm:col-span-2">{select("field", "Professional field", fields, "Select your field…")}</div>
-                  {select("experience", "Years of experience", experience, "Select…")}
-                  {select("education", "Highest education level", education, "Select…")}
-                  {textInput("jobTitle", "Current or most recent job title", { placeholder: "e.g. Caregiver, Electrician, Chef", auto: "organization-title" })}
-                  {textInput("languages", "Languages spoken", { placeholder: "e.g. English, Kiswahili, German (A2)", required: false })}
-                </>
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <Field id="field" label="Field of work" required error={errors.field} className="sm:col-span-2">
+                    <select {...a11y("field", errors.field, undefined, true)} value={d.field} onChange={(e) => set("field", e.target.value)} className={sel(!!errors.field)}>
+                      <option value="">Choose…</option>
+                      {fields.map((f) => (
+                        <option key={f.value} value={f.value}>{f.label}</option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field id="experience" label="Experience" required error={errors.experience}>
+                    <select {...a11y("experience", errors.experience, undefined, true)} value={d.experience} onChange={(e) => set("experience", e.target.value)} className={sel(!!errors.experience)}>
+                      <option value="">Choose…</option>
+                      {experience.map((x) => (
+                        <option key={x.value} value={x.value}>{x.label}</option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field id="education" label="Highest qualification" required error={errors.education}>
+                    <select {...a11y("education", errors.education, undefined, true)} value={d.education} onChange={(e) => set("education", e.target.value)} className={sel(!!errors.education)}>
+                      <option value="">Choose…</option>
+                      {education.map((x) => (
+                        <option key={x.value} value={x.value}>{x.label}</option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field id="jobTitle" label="Current or last job title" className="sm:col-span-2">
+                    <input {...a11y("jobTitle")} value={d.jobTitle} onChange={(e) => set("jobTitle", e.target.value)} className={inputCls()} placeholder="e.g. Caregiver" />
+                  </Field>
+                </div>
               )}
 
               {step === 2 && (
-                <>
-                  {select("country", "Preferred destination", destinations.map((d) => ({ value: d.slug, label: d.name })), "Select a country…")}
-                  {select("visaType", "Visa / programme type", visaTypes, "Select a programme…")}
-                  <div className="sm:col-span-2">
-                    {textInput("preferredJob", "Specific job you're interested in", { placeholder: "e.g. Senior Care Worker", required: false })}
-                  </div>
-                  {select("availability", "When could you start?", availability, "Select…")}
-                  {dest && (
-                    <div className="flex items-center rounded-xl bg-surface-2/60 p-4 text-sm text-muted">
-                      Typical processing for {dest.name}: <strong className="ml-1 text-fg">{dest.processing}</strong>
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <fieldset className="sm:col-span-2" aria-describedby={errors.country ? "country-error" : undefined}>
+                    <legend className="mb-2 text-sm font-semibold text-fg">
+                      Destination country <span className="text-red-400" aria-hidden="true">*</span>
+                    </legend>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      {destinations.map((x, i) => (
+                        <label
+                          key={x.slug}
+                          className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold transition has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-coral/30 ${
+                            d.country === x.slug ? "border-coral bg-coral/15 text-ivory" : "border-jade/40 bg-white/[0.04] text-sand hover:border-jade-300"
+                          }`}
+                        >
+                          <input type="radio" name="country" id={i === 0 ? "country" : undefined} value={x.slug} checked={d.country === x.slug} onChange={() => set("country", x.slug)} className="sr-only" />
+                          <Flag code={x.flag} name={x.country} size={20} />
+                          {x.slug === "uk" ? "UK" : x.slug === "uae" ? "UAE" : x.country}
+                        </label>
+                      ))}
                     </div>
+                    {errors.country && <p id="country-error" className="mt-1.5 text-sm font-medium text-red-400">{errors.country}</p>}
+                  </fieldset>
+                  {job && (
+                    <p className="rounded-xl border border-jade/40 bg-jade/10 px-4 py-3 text-sm text-sand sm:col-span-2">
+                      Applying for <strong className="text-ivory">{job.title}</strong>, {job.city}
+                    </p>
                   )}
-                </>
+                  <Field id="visa" label="Visa type" required error={errors.visa}>
+                    <select {...a11y("visa", errors.visa, undefined, true)} value={d.visa} onChange={(e) => set("visa", e.target.value)} className={sel(!!errors.visa)}>
+                      <option value="">Choose…</option>
+                      {visaTypes.map((v) => (
+                        <option key={v}>{v}</option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field id="passport" label="Passport" required error={errors.passport}>
+                    <select {...a11y("passport", errors.passport, undefined, true)} value={d.passport} onChange={(e) => set("passport", e.target.value)} className={sel(!!errors.passport)}>
+                      <option value="">Choose…</option>
+                      {passportStatus.map((v) => (
+                        <option key={v}>{v}</option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field id="availability" label="Available to travel" required error={errors.availability} className="sm:col-span-2">
+                    <select {...a11y("availability", errors.availability, undefined, true)} value={d.availability} onChange={(e) => set("availability", e.target.value)} className={sel(!!errors.availability)}>
+                      <option value="">Choose…</option>
+                      {availability.map((v) => (
+                        <option key={v}>{v}</option>
+                      ))}
+                    </select>
+                  </Field>
+                </div>
               )}
 
               {step === 3 && (
-                <div className="space-y-6 sm:col-span-2">
-                  <FileDrop id="cv" label="CV / résumé" hint="PDF or DOCX, max 5MB" required files={files.cv} onChange={setFileKey("cv")} error={errors.cv} />
-                  <FileDrop
-                    id="passportCopy"
-                    label="Passport bio page"
-                    hint="PDF or JPG, max 5MB"
-                    required={values.passport === passportStatus[0]}
-                    files={files.passportCopy}
-                    onChange={setFileKey("passportCopy")}
-                    error={errors.passportCopy}
-                  />
-                  <FileDrop
-                    id="certificates"
-                    label="Certificates (academic / professional)"
-                    hint="Up to 6 files · PDF, DOCX or JPG · max 5MB each"
-                    multiple
-                    files={files.certificates}
-                    onChange={setFileKey("certificates")}
-                    error={errors.certificates}
-                  />
-                  <p className="text-xs text-muted">Files stay on your device in this demo. Nothing is uploaded.</p>
+                <div className="space-y-6">
+                  <FileDrop id="cv" label="CV" required hint="PDF, DOCX or JPG · max 5MB" files={files.cv} error={errors.cv} onChange={(f, err) => { setFiles((p) => ({ ...p, cv: f })); setErrors((e) => ({ ...e, cv: err ?? "" })); }} />
+                  <FileDrop id="passport-file" label="Passport bio page" required hint="Clear photo or scan · max 5MB" files={files.passport} error={errors.passportFile} onChange={(f, err) => { setFiles((p) => ({ ...p, passport: f })); setErrors((e) => ({ ...e, passportFile: err ?? "" })); }} />
+                  <FileDrop id="certs" label="Certificates" multiple hint="Up to 6 files · max 5MB each" files={files.certs} error={errors.certs} onChange={(f, err) => { setFiles((p) => ({ ...p, certs: f })); setErrors((e) => ({ ...e, certs: err ?? "" })); }} />
+                  <p className="text-xs text-sand/60">Demo: files stay in your browser and are never uploaded.</p>
                 </div>
               )}
 
               {step === 4 && (
-                <div className="space-y-4 sm:col-span-2">
-                  <Review title="Personal details" onEdit={() => goto(0)}>
-                    <Row k="Name" v={values.fullName} />
-                    <Row k="Email" v={values.email} />
-                    <Row k="Phone" v={normaliseKenyanPhone(values.phone) ?? values.phone} />
-                    <Row k="County" v={values.county} />
-                    <Row k="Passport" v={values.passport} />
-                  </Review>
-                  <Review title="Career details" onEdit={() => goto(1)}>
-                    <Row k="Field" v={fieldLabel(values.field)} />
-                    <Row k="Experience" v={experienceLabel(values.experience)} />
-                    <Row k="Education" v={educationLabel(values.education)} />
-                    <Row k="Job title" v={values.jobTitle} />
-                    <Row k="Languages" v={values.languages || "-"} />
-                  </Review>
-                  <Review title="Destination & visa" onEdit={() => goto(2)}>
-                    <Row k="Country" v={dest?.name ?? "-"} />
-                    <Row k="Visa type" v={values.visaType} />
-                    <Row k="Job interest" v={values.preferredJob || "-"} />
-                    <Row k="Availability" v={values.availability} />
-                  </Review>
-                  <Review title="Documents" onEdit={() => goto(3)}>
-                    <Row k="CV" v={files.cv.map((f) => f.name).join(", ") || "-"} />
-                    <Row k="Passport" v={files.passportCopy.map((f) => f.name).join(", ") || "Not provided"} />
-                    <Row k="Certificates" v={files.certificates.length ? `${files.certificates.length} file(s)` : "None"} />
-                  </Review>
-
+                <div className="space-y-4">
+                  {[
+                    { s: 0, title: "Personal", rows: [["Name", d.name], ["Phone", normaliseKenyanPhone(d.phone) ?? d.phone], ["Email", d.email], ["County", d.county || "—"]] },
+                    { s: 1, title: "Career", rows: [["Field", fields.find((f) => f.value === d.field)?.label ?? ""], ["Experience", experience.find((x) => x.value === d.experience)?.label ?? ""], ["Qualification", education.find((x) => x.value === d.education)?.label ?? ""]] },
+                    { s: 2, title: "Destination & visa", rows: [["Country", dest?.country ?? ""], ["Visa", d.visa], ["Passport", d.passport], ["Travel", d.availability]] },
+                    { s: 3, title: "Documents", rows: [["CV", files.cv[0]?.name ?? ""], ["Passport", files.passport[0]?.name ?? ""], ["Certificates", files.certs.length ? `${files.certs.length} file(s)` : "—"]] },
+                  ].map((g) => (
+                    <section key={g.title} className="rounded-2xl border border-jade/30 bg-white/[0.03] p-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-mono text-xs uppercase tracking-wider text-jade-300">{g.title}</h3>
+                        <button type="button" onClick={() => goTo(g.s)} className="inline-flex items-center gap-1 text-xs font-semibold text-coral-300 hover:text-coral">
+                          <Pencil className="h-3.5 w-3.5" aria-hidden="true" /> Edit<span className="sr-only"> {g.title}</span>
+                        </button>
+                      </div>
+                      <dl className="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+                        {g.rows.map(([k, v]) => (
+                          <div key={k} className="flex justify-between gap-3 sm:block">
+                            <dt className="text-sand/60">{k}</dt>
+                            <dd className="truncate font-semibold text-ivory">{v}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </section>
+                  ))}
                   <div>
-                    <label
-                      htmlFor="consent"
-                      className={`flex cursor-pointer gap-3 rounded-xl border p-4 transition ${errors.consent ? "border-red-500 bg-red-50/40 dark:bg-red-500/5" : "border-line hover:border-royal/50"}`}
-                    >
+                    <label className="flex cursor-pointer gap-3 text-sm leading-relaxed text-sand/85">
                       <input
                         id="consent"
                         type="checkbox"
-                        checked={values.consent}
+                        checked={d.consent}
                         onChange={(e) => set("consent", e.target.checked)}
                         aria-invalid={errors.consent ? true : undefined}
                         aria-describedby={errors.consent ? "consent-error" : undefined}
-                        className="mt-0.5 h-5 w-5 shrink-0 accent-[#2847D9]"
+                        className="mt-1 h-4 w-4 shrink-0 accent-coral"
                       />
-                      <span className="text-sm leading-relaxed text-fg">
-                        I consent to {site.name} collecting and processing my personal data and documents for recruitment purposes, and sharing them with
-                        prospective employers and immigration authorities, in accordance with the <strong>Kenya Data Protection Act, 2019</strong> and the{" "}
-                        <Link href="/privacy" className="font-semibold text-link underline underline-offset-2">
-                          Privacy Policy
-                        </Link>
-                        . I confirm the information provided is true.
-                      </span>
+                      I confirm these details are true and agree that {site.name} may process my data under the Kenya Data Protection Act, 2019 to find me a job.
                     </label>
-                    <ErrorText id="consent-error">{errors.consent}</ErrorText>
+                    {errors.consent && <p id="consent-error" className="mt-1.5 text-sm font-medium text-red-400">{errors.consent}</p>}
                   </div>
                 </div>
               )}
-            </div>
-          </m.section>
-        </AnimatePresence>
-      </div>
 
-      {/* Navigation */}
-      <div className="mt-8 flex flex-col-reverse gap-3 border-t border-line pt-6 sm:flex-row sm:items-center sm:justify-between">
-        {step > 0 ? (
-          <button type="button" onClick={() => goto(step - 1)} className={btn("ghost")}>
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back
-          </button>
-        ) : (
-          <span className="hidden sm:block" />
-        )}
-        {step < STEPS.length - 1 ? (
-          <button type="button" onClick={next} className={btn("primary", "px-7")}>
-            Continue to {STEPS[step + 1].short.toLowerCase()} <ArrowRight className="h-4 w-4" aria-hidden="true" />
-          </button>
-        ) : (
-          <button type="button" onClick={submit} disabled={status === "submitting"} className={btn("gold", "px-8 py-3.5 text-base")}>
-            {status === "submitting" ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" /> Submitting…
-              </>
-            ) : (
-              <>
-                Submit application <Check className="h-5 w-5" aria-hidden="true" />
-              </>
-            )}
-          </button>
+              <div className="mt-8 flex items-center justify-between gap-3 border-t border-jade/20 pt-6">
+                {step > 0 ? (
+                  <button type="button" onClick={() => goTo(step - 1)} className={btn("ghost")}>
+                    <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back
+                  </button>
+                ) : (
+                  <span className="text-xs text-sand/60">About 10 minutes · saved in this tab only</span>
+                )}
+                <button type="submit" className={btn("primary")}>
+                  {step < 4 ? (
+                    <>Continue <ArrowRight className="h-4 w-4" aria-hidden="true" /></>
+                  ) : (
+                    <>Submit application <Check className="h-4 w-4" aria-hidden="true" /></>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
         )}
       </div>
-    </div>
-  );
-}
 
-function Review({ title, onEdit, children }: { title: string; onEdit: () => void; children: ReactNode }) {
-  return (
-    <div className={`${card} p-5`}>
-      <div className="flex items-center justify-between">
-        <h3 className="font-display font-semibold text-fg">{title}</h3>
-        <button type="button" onClick={onEdit} className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm font-semibold text-link hover:bg-surface-2">
-          <Pencil className="h-3.5 w-3.5" aria-hidden="true" /> Edit <span className="sr-only">{title}</span>
-        </button>
-      </div>
-      <dl className="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">{children}</dl>
-    </div>
-  );
-}
-
-function Row({ k, v }: { k: string; v: string }) {
-  return (
-    <div className="flex gap-2">
-      <dt className="w-24 shrink-0 text-muted">{k}</dt>
-      <dd className="min-w-0 break-words font-medium text-fg">{v}</dd>
+      <aside className="order-first lg:order-none" aria-label="Your route">
+        <div className="glass rounded-3xl p-4 lg:sticky lg:top-24">
+          <div className="relative mx-auto aspect-square w-40 sm:w-52 lg:w-full">
+            <JourneyGlobe
+              variant="mini"
+              nodes={globe.nodes}
+              path={globe.path}
+              line={globe.line}
+              activeId={globe.active}
+              visitedIds={["nairobi"]}
+              focus={globe.focus}
+              view={{ x: 0, y: 0, zoom: 0.92 }}
+              className="absolute inset-0"
+              posterClassName="inset-[10%]"
+            />
+          </div>
+          <p className="mt-3 text-center font-mono text-[11px] uppercase tracking-[0.18em] text-jade-300">
+            Nairobi → {dest ? dest.city : "choose a destination"}
+          </p>
+          <p className="mt-1 text-center text-xs text-sand/60">{ref ? "Route complete" : `${Math.round((dest ? Math.min(1, step / 4) : 0) * 100)}% of the route plotted`}</p>
+        </div>
+      </aside>
     </div>
   );
 }
