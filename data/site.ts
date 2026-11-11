@@ -19,7 +19,7 @@ export const site = {
   address: "[Building, Street], Nairobi, Kenya",
   hours: "Mon – Fri, 8:00am – 5:30pm · Sat, 9:00am – 1:00pm",
   /** Live domain: used for canonical URLs, sitemap and Open Graph. */
-  url: "https://example.com",
+  url: "https://sunrise-horizon.vercel.app",
   /** Prefix for application reference numbers, e.g. JRN-2026-48213 */
   refPrefix: "JRN",
   socials: { facebook: "#", instagram: "#", linkedin: "#", tiktok: "#" },
